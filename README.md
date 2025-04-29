@@ -1,10 +1,10 @@
 # OBS Time Stamp Tracker
 
 ## Table of Contents:
-[Description](#description)
-[ChangeLog](#changelog)
-[Downloads](#downloads)
-[Set up Instructions](#set-up-instructions)
+- [Description](#description)
+- [ChangeLog](#changelog)
+- [Downloads](#downloads)
+- [Set up Instructions](#set-up-instructions)
 
 
 ### Changelog
@@ -37,12 +37,12 @@ No Official Support
 No Official Support
 
 
-### SetupInstructions
+### Set up Instructions
 **Step 0:**
 [Install](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file) OBS Time Tracker
 
-**Step 1:
-**
+**Step 1:**
+
 Create a folder anywhere on your PC called whatever you want, mine is called Time Stamps
 
 **Step 2:**
