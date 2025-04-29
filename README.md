@@ -8,9 +8,17 @@
 
 
 ## Changelog
-**Most Recent Version: 1.0**
+#### Version 1.0
+- Initial Release
 ##### What's New?
 - Application created
+
+
+**Future Ideas**
+- Customizable OBS port/password
+- Timestamp tagging (e.g., “Funny”, “Bug”, “Highlight”)
+- Export to `.csv` or `.json`
+- Automatically save when you close the application
 
 ## Description
 Track OBS Time Stamps While Recording
