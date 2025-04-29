@@ -7,12 +7,12 @@
 - [Set up Instructions](#set-up-instructions)
 
 
-### Changelog
+## Changelog
 **Most Recent Version: 1.0**
 ##### What's New?
 - Application created
 
-### Description
+## Description
 Track OBS Time Stamps While Recording
 
 Run the application with OBS already open to get started
@@ -28,7 +28,7 @@ You can change the hotkey for marking time stamps by pressing the "Change Hotkey
 After your OBS recording session is done click "Save & Exit"
 
 A text file will be generated in the same folder as the .exe file that contains all your time stamps
-### Downloads
+## Downloads
 #### Windows:
 Version 1.0 - Download [Here](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file)
 #### Linux
@@ -37,7 +37,7 @@ No Official Support
 No Official Support
 
 
-### Set up Instructions
+## Set up Instructions
 **Step 0:**
 [Install](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file) OBS Time Tracker
 
