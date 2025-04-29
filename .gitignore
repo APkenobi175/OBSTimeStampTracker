@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller build folders
+build/
+dist/
+*.spec
+
+# Installer logs
+*.log
+
+# Mac / Windows trash
+.DS_Store
+Thumbs.db
+
+# Python virtual environment
+.venv/
+env/
+venv/
+
+# Runtime files
+*.exe
+*.ico
+
+# Config (optional - if you don’t want to track config.json)
+config.json
+
+# IDEs
+.idea/
+.vscode/
+
