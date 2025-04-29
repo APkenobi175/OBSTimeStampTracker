@@ -1,13 +1,33 @@
 # OBS Time Stamp Tracker
 
-## Most Recent Version: 1.0
+## Table of Contents:
+[Description](#description)
+[ChangeLog](#changelog)
+[Downloads](#downloads)
+[Set up Instructions](#set-up-instructions)
+
+
+### Changelog
+**Most Recent Version: 1.0**
+##### What's New?
+- Application created
 
 ### Description
 Track OBS Time Stamps While Recording
-Click the "Mark Funny Moment" Button to record a time stamp to a text file
-You can also press the default hotkey of F12 and it will also mark the time stamp
 
+Run the application with OBS already open to get started
 
+There are two ways to mark an time stamp:
+1. Click the "Mark Funny Moment"
+2. Press the hotkey on the keyboard. 
+>[!NOTE]
+>The default hotkey is F12
+
+You can change the hotkey for marking time stamps by pressing the "Change Hotkey" Button
+
+After your OBS recording session is done click "Save & Exit"
+
+A text file will be generated in the same folder as the .exe file that contains all your time stamps
 ### Downloads
 #### Windows:
 Version 1.0 - Download [Here](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file)
@@ -17,7 +37,7 @@ No Official Support
 No Official Support
 
 
-## Set up Instructions
+### SetupInstructions
 **Step 0:**
 [Install](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file) OBS Time Tracker
 
