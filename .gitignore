@@ -1,29 +1,45 @@
-# Byte-compiled / optimized / DLL files
+# -----------------------
+# Python
+# -----------------------
 __pycache__/
 *.py[cod]
 *$py.class
 
-# PyInstaller build folders
+# -----------------------
+# Virtual environments
+# -----------------------
+.venv/
+venv/
+env/
+
+# -----------------------
+# PyInstaller
+# -----------------------
 build/
 dist/
 *.spec
+__pyinstaller__/
 
-# Installer logs
+# -----------------------
+# Installers
+# -----------------------
+installer_out/
 *.log
 
-# Mac / Windows trash
+# -----------------------
+# Runtime / local configs
+# -----------------------
+config.json
+*.local.json
+
+# -----------------------
+# OS junk
+# -----------------------
 .DS_Store
 Thumbs.db
 
-# Python virtual environment
-.venv/
-env/
-venv/
-
-# Runtime files
-*.exe
-
+# -----------------------
 # IDEs
+# -----------------------
 .idea/
 .vscode/
-

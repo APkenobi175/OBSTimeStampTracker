@@ -9,6 +9,12 @@ from dataclasses import dataclass
 from pynput import keyboard
 from obsws_python import ReqClient
 
+from pathlib import Path
+from platformdirs import user_config_dir, user_data_dir
+
+import re
+
+
 if sys.platform.startswith("win"):
     import ctypes
 
@@ -16,7 +22,11 @@ if sys.platform.startswith("win"):
 # Constants
 # ---------------------------------------------------------------------------
 
-CFG_PATH = "config.json"
+
+APP_NAME = "OBSSessions"
+APP_AUTHOR = "RoxmaStudiosLLC"
+
+CFG_PATH = Path(user_config_dir(APP_NAME, APP_AUTHOR)) / "config.json"
 DEFAULT_CFG = {
     "host": "localhost",
     "port": 4455,
@@ -24,7 +34,7 @@ DEFAULT_CFG = {
     "hotkey": "f12",
     "save_dir": "",
     "geometry": "",
-    "silent_close": False,
+    "silent_close": True,
 }
 
 ACCENT    = "#007BFF"
@@ -64,19 +74,43 @@ def resource_path(relative_path: str) -> str:
 
 def load_config() -> dict:
     cfg = DEFAULT_CFG.copy()
-    try:
-        if os.path.exists(CFG_PATH):
-            with open(CFG_PATH, "r", encoding="utf-8") as f:
-                cfg.update(json.load(f))
-    except Exception:
-        pass
+    changed = False
+
+    if CFG_PATH.exists():
+        try:
+            with CFG_PATH.open("r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                cfg.update(loaded)
+            else:
+                # corrupt format
+                changed = True
+        except Exception:
+            # unreadable/corrupt -> rewrite with defaults
+            changed = True
+    else:
+        changed = True
+
+    # Default save location once (and ensure it exists)
+    if not (cfg.get("save_dir") or "").strip():
+        sessions_dir = Path(user_data_dir(APP_NAME, APP_AUTHOR)) / "Sessions"
+        sessions_dir.mkdir(parents=True, exist_ok=True)
+        cfg["save_dir"] = str(sessions_dir)
+        changed = True
+
+    if changed:
+        save_config(cfg)
+
     return cfg
 
 
 def save_config(cfg: dict) -> None:
     try:
-        with open(CFG_PATH, "w", encoding="utf-8") as f:
+        CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        with CFG_PATH.open("w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
+
     except Exception as e:
         print(f"[WARN] Failed to save config: {e}")
 
@@ -95,7 +129,7 @@ def format_seconds(total_seconds: int) -> str:
 class OBSTimestampLogger:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("Discord Moments Logger")
+        self.root.title("OBS Sessions")
         self.root.configure(bg=BG)
 
         try:
@@ -106,7 +140,7 @@ class OBSTimestampLogger:
         if sys.platform.startswith("win"):
             try:
                 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-                    "mycompany.discordmomentstracker.1.0"
+                    "RoxmaStudiosLLC.OBSSessions"
                 )
             except Exception:
                 pass
@@ -208,7 +242,7 @@ class OBSTimestampLogger:
 
         # Smaller, lighter title
         tk.Label(
-            tab, text="Discord Moments Tracker",
+            tab, text="OBS Sessions",
             font=("Arial", 15, "bold"), bg=BG, fg="#333",
         ).pack(pady=(8, 12))
 
@@ -413,8 +447,10 @@ class OBSTimestampLogger:
         self._session_files = []
 
         try:
+            pattern = re.compile(r"^\d{1,2}-\d{1,2}-\d{2}\(Session\d+\)\.json$", re.IGNORECASE)
+
             files = sorted(
-                [f for f in os.listdir(base_dir) if f.endswith(".json")],
+                [f for f in os.listdir(base_dir) if pattern.match(f)],
                 reverse=True,
             )
         except Exception:
@@ -763,7 +799,13 @@ class OBSTimestampLogger:
     # ------------------------------------------------------------------
 
     def _base_dir(self) -> str:
-        return self.cfg.get("save_dir") or os.getcwd()
+        d = (self.cfg.get("save_dir") or "").strip()
+        if not d:
+            d = str(Path(user_data_dir(APP_NAME, APP_AUTHOR)))
+            Path(d).mkdir(parents=True, exist_ok=True)
+            self.cfg["save_dir"] = d
+            save_config(self.cfg)
+        return d
 
     def _next_filename(self) -> str:
         now = datetime.now()
