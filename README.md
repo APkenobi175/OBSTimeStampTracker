@@ -19,7 +19,7 @@
 
 ## Description
 
-**Discord Moments Logger** connects to OBS via WebSocket and lets you mark timestamps during a recording session — with optional comments — so you can find your funny moments later without scrubbing through the whole video.
+**Discord Moments Logger** connects to OBS via WebSocket and lets you mark timestamps during a recording session with optional comments, so you can find your funny moments later without searching through the whole video.
 
 Timestamps are saved as `.json` files and can be browsed directly inside the app from the History tab.
 
@@ -32,18 +32,18 @@ Timestamps are saved as `.json` files and can be browsed directly inside the app
 
 ##### What's New
 - **Comments** — add a note to each timestamp as you mark it
-- **Timestamps tab** — view, edit, and delete timestamps for the current session live
-- **History tab** — browse all past recording sessions from your save folder, click to view
-- **JSON output** — timestamps now save as structured `.json` instead of plain text
-- **Smarter filenames** — files are now named `2-28-26(Session1).json`, `2-28-26(Session2).json` etc.
-- **Save & Start Fresh** — save your current session and start a new one without exiting
-- **Copy to Clipboard** — copy all timestamps for the current session with one click
-- **Configurable save folder** — choose where your files are saved from the Settings tab
-- **Configurable OBS connection** — set host, port, and password from the Settings tab (no more hardcoded values)
-- **Silent close** — option to have the X button save and quit without a prompt
-- **Non-blocking startup** — app launches instantly even if OBS isn't running yet, a seperate thread handles the connection in the bacgkround and the status bar will update once connected
-- **Auto-save on recording stop** — timestamps are automatically saved when OBS stops recording
-- **Counter badge** — live count of timestamps marked this session
+- **Timestamps tab** - view, edit, and delete timestamps for the current session live
+- **History tab** - browse all past recording sessions from your save folder, click to view
+- **JSON output** - timestamps now save as structured `.json` instead of plain text
+- **Smarter filenames** - files are now named `2-28-26(Session1).json`, `2-28-26(Session2).json` etc.
+- **Save & Start Fresh** - save your current session and start a new one without exiting
+- **Copy to Clipboard** - copy all timestamps for the current session with one click
+- **Configurable save folder** - choose where your files are saved from the Settings tab
+- **Configurable OBS connection** - set host, port, and password from the Settings tab (no more hardcoded values)
+- **Silent close** - option to have the X button save and quit without a prompt
+- **Non-blocking startup** - app launches instantly even if OBS isn't running yet, a seperate thread handles the connection in the bacgkround and the status bar will update once connected
+- **Auto-save on recording stop** - timestamps are automatically saved when OBS stops recording
+- **Counter badge** - live count of timestamps marked this session
 
 ---
 
@@ -99,7 +99,7 @@ Download and install OBS from [obsproject.com](https://obsproject.com/download) 
 2. In the top menu click **Tools → WebSocket Server Settings**
 3. Check **Enable WebSocket Server**
 4. Set the port to `4455`
-5. Set a password — you'll enter this in the app's Settings tab
+5. Set a password, you'll enter this in the app's Settings tab
 
 <div align="center">
   <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191240.png" alt="Settings Tab" width="420"/>
@@ -111,16 +111,16 @@ Download and install OBS from [obsproject.com](https://obsproject.com/download) 
 
 Open the app and go to the **Settings tab**:
 
-- **OBS Host** — `localhost` (or your Windows IP if running across WSL)
-- **OBS Port** — `4455`
-- **Password** — whatever you set in OBS WebSocket settings
-- **Save Folder** — choose where your session `.json` files will be saved
+- **OBS Host** - `localhost` (or your Windows IP if running across WSL)
+- **OBS Port** - `4455`
+- **Password** - whatever you set in OBS WebSocket settings
+- **Save Folder** - choose where your session `.json` files will be saved
 - Hit **Save Settings**
 
 The status bar at the bottom of the Main tab will confirm you're connected.
 
 > [!NOTE]
-> The app will launch even if OBS isn't running — it connects in the background and the status bar will update once connected.
+> The app will launch even if OBS isn't running. it connects in the background and the status bar will update once connected.
 
 ---
 
