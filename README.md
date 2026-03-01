@@ -1,7 +1,7 @@
 # Discord Moments Logger
 
 <div align="center">
-  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Screen" width="420"/>
+  <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Screen" width="420"/>
   <br/>
   <em>Mark funny moments in real time while OBS records</em>
 </div>
@@ -102,7 +102,7 @@ Download and install OBS from [obsproject.com](https://obsproject.com/download) 
 5. Set a password — you'll enter this in the app's Settings tab
 
 <div align="center">
-  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191240.png" alt="Settings Tab" width="420"/>
+  <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191240.png" alt="Settings Tab" width="420"/>
   <br/>
   <em>Enter your OBS connection details in the Settings tab</em>
 </div>
@@ -127,7 +127,7 @@ The status bar at the bottom of the Main tab will confirm you're connected.
 ## How To Use
 
 <div align="center">
-  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Tab" width="420"/>
+  <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Tab" width="420"/>
 </div>
 
 ### Marking Timestamps
@@ -149,7 +149,7 @@ The counter badge in the top right updates live so you always know how many mome
 ### Managing Timestamps
 
 <div align="center">
-  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191213.png" alt="Timestamps Tab" width="420"/>
+  <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191213.png" alt="Timestamps Tab" width="420"/>
   <br/>
   <em>Edit or delete individual timestamps during your session</em>
 </div>
@@ -195,7 +195,7 @@ Each file contains structured JSON:
 ### Viewing Past Sessions
 
 <div align="center">
-  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191226.png" alt="History Tab" width="420"/>
+  <img src="OBSDiscordButton\assets\Screenshot 2026-02-28 191226.png" alt="History Tab" width="420"/>
   <br/>
   <em>Browse and view all past sessions from your save folder</em>
 </div>
