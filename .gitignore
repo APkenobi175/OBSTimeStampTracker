@@ -22,10 +22,6 @@ venv/
 
 # Runtime files
 *.exe
-*.ico
-
-# Config (optional - if you don’t want to track config.json)
-config.json
 
 # IDEs
 .idea/

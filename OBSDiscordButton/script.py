@@ -258,6 +258,7 @@ class OBSTimestampLogger:
             self.cfg["port"] = 4455
 
         save_config(self.cfg)
+        self.filename = self._next_filename()
         self._obs_status = "Connecting to OBS..."
         self.status_label.config(text=self._obs_status)
         self._connect_obs()
