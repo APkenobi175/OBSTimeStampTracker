@@ -1,103 +1,209 @@
-# OBS Time Stamp Tracker
+# Discord Moments Logger
 
-## Table of Contents:
+<div align="center">
+  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Screen" width="420"/>
+  <br/>
+  <em>Mark funny moments in real time while OBS records</em>
+</div>
+
+---
+
+## Table of Contents
 - [Description](#description)
-- [ChangeLog](#changelog)
+- [Changelog](#changelog)
 - [Downloads](#downloads)
-- [Set up Instructions](#set-up-instructions)
+- [Set Up Instructions](#set-up-instructions)
+- [How To Use](#how-to-use)
 
-
-## Changelog
-#### Version 1.0
-- Initial Release
-##### What's New?
-- Application created
-
-
-**Future Ideas**
-- Customizable OBS port/password
-- Timestamp tagging (e.g., “Funny”, “Bug”, “Highlight”)
-- Export to `.csv` or `.json`
-- Automatically save when you close the application
+---
 
 ## Description
-Track OBS Time Stamps While Recording
 
-Run the application with OBS already open to get started
+**Discord Moments Logger** connects to OBS via WebSocket and lets you mark timestamps during a recording session — with optional comments — so you can find your funny moments later without scrubbing through the whole video.
 
-There are two ways to mark an time stamp:
-1. Click the "Mark Funny Moment"
-2. Press the hotkey on the keyboard. 
->[!NOTE]
->The default hotkey is F12
+Timestamps are saved as `.json` files and can be browsed directly inside the app from the History tab.
 
-You can change the hotkey for marking time stamps by pressing the "Change Hotkey" Button
+---
 
-After your OBS recording session is done click "Save & Exit"
+## Changelog
 
-A text file will be generated in the same folder as the .exe file that contains all your time stamps
+### Version 2.0
+> Complete rewrite and redesign
+
+##### What's New
+- **Comments** — add a note to each timestamp as you mark it
+- **Timestamps tab** — view, edit, and delete timestamps for the current session live
+- **History tab** — browse all past recording sessions from your save folder, click to view
+- **JSON output** — timestamps now save as structured `.json` instead of plain text
+- **Smarter filenames** — files are now named `2-28-26(Session1).json`, `2-28-26(Session2).json` etc.
+- **Save & Start Fresh** — save your current session and start a new one without exiting
+- **Copy to Clipboard** — copy all timestamps for the current session with one click
+- **Configurable save folder** — choose where your files are saved from the Settings tab
+- **Configurable OBS connection** — set host, port, and password from the Settings tab (no more hardcoded values)
+- **Silent close** — option to have the X button save and quit without a prompt
+- **Non-blocking startup** — app launches instantly even if OBS isn't running yet, a seperate thread handles the connection in the bacgkround and the status bar will update once connected
+- **Auto-save on recording stop** — timestamps are automatically saved when OBS stops recording
+- **Counter badge** — live count of timestamps marked this session
+
+---
+
+### Version 1.0
+> Initial Release
+- Application created
+- Basic timestamp marking via button or hotkey
+- F12 default hotkey
+- Plain text `.txt` output
+
+---
+
 ## Downloads
-#### Windows:
-Version 1.0 - Download [Here](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file)
-#### Linux
-No Official Support
-#### MAC
-No Official Support
 
+<table>
+  <tr>
+    <th>Platform</th>
+    <th>Version</th>
+    <th>Link</th>
+  </tr>
+  <tr>
+    <td> Windows</td>
+    <td>2.0</td>
+    <td><em>Coming soon</em></td>
+  </tr>
+  <tr>
+    <td> Windows</td>
+    <td>1.0 (legacy)</td>
+    <td><a href="https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file">Download</a></td>
+  </tr>
+  <tr>
+    <td> Linux</td>
+    <td>—</td>
+    <td>No official support</td>
+  </tr>
+  <tr>
+    <td> macOS</td>
+    <td>—</td>
+    <td>No official support</td>
+  </tr>
+</table>
 
-## Set up Instructions
-**Step 0:**
-[Install](https://www.mediafire.com/file/x7oqkeqvetzbkcf/OBSTimeTracker.exe/file) OBS Time Tracker
+---
 
-**Step 1:**
+## Set Up Instructions
 
-Create a folder anywhere on your PC called whatever you want, mine is called Time Stamps
+### Step 1 — Install OBS
+Download and install OBS from [obsproject.com](https://obsproject.com/download) if you haven't already.
 
-**Step 2:**
+### Step 2 — Enable OBS WebSocket
 
-Place the OBSTimeTracker.exe file in there
+1. Open OBS
+2. In the top menu click **Tools → WebSocket Server Settings**
+3. Check **Enable WebSocket Server**
+4. Set the port to `4455`
+5. Set a password — you'll enter this in the app's Settings tab
 
-**Step 3:**
+<div align="center">
+  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191240.png" alt="Settings Tab" width="420"/>
+  <br/>
+  <em>Enter your OBS connection details in the Settings tab</em>
+</div>
 
-Open OBS
-Install OBS [Here](https://obsproject.com/download)
+### Step 3 — Configure the App
 
-**Step 4:**
+Open the app and go to the **Settings tab**:
 
-In the ribbon in OBS click on "Tools" and click on "websocket server settings"
+- **OBS Host** — `localhost` (or your Windows IP if running across WSL)
+- **OBS Port** — `4455`
+- **Password** — whatever you set in OBS WebSocket settings
+- **Save Folder** — choose where your session `.json` files will be saved
+- Hit **Save Settings**
 
-**Step 5:**
+The status bar at the bottom of the Main tab will confirm you're connected.
 
-Check the enable WebSocket Server box
-
-**Step 6:**
-
-Make sure your port is set to 4455
-
-**Step 7:**
-
-Set the server password to "JimBob123"
 > [!NOTE]
-> The Password is hard coded in so this must be your password for the script to work
+> The app will launch even if OBS isn't running — it connects in the background and the status bar will update once connected.
 
-This gives the program access to your OBS
+---
 
-**Step 8:**
+## How To Use
 
-Run the .exe file, ensure that it says that its connected to OBS
+<div align="center">
+  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191157.png" alt="Main Tab" width="420"/>
+</div>
 
-**Step 9:**
+### Marking Timestamps
 
-When you start recording it should display the time stamp of your current recording
+Start a recording in OBS. The status bar will show `● Recording  00:00:00`.
 
-**Step 10:** 
+To mark a timestamp:
+- Type an optional comment in the **Comment** box, then
+- Click **Mark Funny Moment**, or
+- Press your hotkey (default: **F12**)
 
-Click on Mark Funny Moment and it will save all your funny moments to a .txt file. The .txt file will not show up until:
+> [!NOTE]
+> The comment box clears automatically after each mark. You can also press **Enter** from the comment box to mark without clicking the button.
 
-1- **You click "Save and exit"** 
+The counter badge in the top right updates live so you always know how many moments you've marked.
 
->[!WARNING]
->You must click save and exit to get your .txt file, if you don't you'll lose your time stamps
+---
 
-**Step 11:**
-Your .txt document will be saved in the same folder as the .exe file, and it will be named "ObsTimeStamps(todaysdate). If you have multiple documents with the same date it will just create the same .txt file but with a (1),(2),(3) at the end
+### Managing Timestamps
+
+<div align="center">
+  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191213.png" alt="Timestamps Tab" width="420"/>
+  <br/>
+  <em>Edit or delete individual timestamps during your session</em>
+</div>
+
+Click the **Timestamps tab** to see everything you've marked this session. From here you can:
+
+- **Edit** a comment by clicking the Edit button - press Enter or Escape to save
+- **Delete** a timestamp with the X button
+- **Copy All** to clipboard with one click
+
+---
+
+### Saving
+
+You have three options:
+
+| Action | What it does |
+|---|---|
+| **Save & Start Fresh** | Saves current session to a `.json` file and clears the list for a new session |
+| **Save & Exit** | Saves and closes the app |
+| **Auto-save** | Happens automatically when OBS stops recording |
+
+> [!WARNING]
+> If you close the app with the X button and choose **No** at the prompt, your unsaved timestamps will be lost. Enable **"X button saves & quits without prompt"** in Settings to always save on close.
+
+Files are named like this:
+```
+2-28-26(Session1).json
+2-28-26(Session2).json
+3-1-26(Session1).json
+```
+
+Each file contains structured JSON:
+```json
+[
+  { "timestamp": "00:16:12", "comment": "Kevin said something dumb" },
+  { "timestamp": "00:34:55", "comment": "" }
+]
+```
+
+---
+
+### Viewing Past Sessions
+
+<div align="center">
+  <img src="C:\Users\phipp\Documents\GitHub\OBSTimeStampTracker\OBSDiscordButton\assets\Screenshot 2026-02-28 191226.png" alt="History Tab" width="420"/>
+  <br/>
+  <em>Browse and view all past sessions from your save folder</em>
+</div>
+
+Click the **History tab** to browse all past sessions saved in your configured folder. Click any session on the left to view its timestamps and comments on the right.
+
+---
+
+### Changing the Hotkey
+
+Go to **Settings → Change Hotkey** and press any key. The new hotkey is saved immediately.

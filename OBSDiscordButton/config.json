@@ -1,0 +1,9 @@
+{
+  "host": "localhost",
+  "port": 4455,
+  "password": "JimBob123",
+  "hotkey": "f12",
+  "save_dir": "Z:/OBS/Clips",
+  "geometry": "464x366+367+259",
+  "silent_close": true
+}
