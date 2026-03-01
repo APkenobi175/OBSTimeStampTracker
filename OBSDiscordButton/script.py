@@ -1,34 +1,44 @@
+import sys
+import os
+import json
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from obsws_python import ReqClient
 from datetime import datetime
-import os
 from pynput import keyboard
-import json
-import sys
+from obsws_python import ReqClient
 
 # Windows taskbar icon fix
-if sys.platform.startswith('win'):
+if sys.platform.startswith("win"):
     import ctypes
 
-CFG_PATH = "config.json"
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+CFG_PATH = "config/config.json"
 DEFAULT_CFG = {
     "host": "localhost",
     "port": 4455,
     "password": "JimBob123",
     "hotkey": "f12",
     "save_dir": "",
-    "geometry": ""
+    "geometry": "",
+    "silent_close": False,
 }
 
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
 
-def load_config():
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def resource_path(relative_path: str) -> str:
+    """Return the absolute path to a bundled resource (PyInstaller-aware)."""
+    base = getattr(sys, "_MEIPASS", os.path.abspath("."))
+    return os.path.join(base, relative_path)
+
+
+def load_config() -> dict:
     cfg = DEFAULT_CFG.copy()
     try:
         if os.path.exists(CFG_PATH):
@@ -38,29 +48,48 @@ def load_config():
         pass
     return cfg
 
-def save_config(cfg):
+
+def save_config(cfg: dict) -> None:
     try:
         with open(CFG_PATH, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
     except Exception as e:
-        print(f"[WARN] failed to save config: {e}")
+        print(f"[WARN] Failed to save config: {e}")
+
+
+def format_seconds(total_seconds: int) -> str:
+    h = total_seconds // 3600
+    m = (total_seconds % 3600) // 60
+    s = total_seconds % 60
+    return f"{h:02}:{m:02}:{s:02}"
+
+
+# ---------------------------------------------------------------------------
+# Main application
+# ---------------------------------------------------------------------------
 
 class OBSTimestampLogger:
-    def __init__(self, root):
+    def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.root.title("Discord Moments Logger")
+        self.root.configure(bg="#f0f2f5")
+
+        # Icon
         try:
             self.root.iconbitmap(resource_path("thatstheone.ico"))
         except Exception:
             pass
 
-        if sys.platform.startswith('win'):
+        # Windows taskbar app ID
+        if sys.platform.startswith("win"):
             try:
-                myappid = 'mycompany.discordmomentstracker.1.0'
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                    "mycompany.discordmomentstracker.1.0"
+                )
             except Exception:
                 pass
 
+        # Config & geometry
         self.cfg = load_config()
         if self.cfg.get("geometry"):
             try:
@@ -68,160 +97,177 @@ class OBSTimestampLogger:
             except Exception:
                 pass
 
-        self.timestamps = []                   # list[str] like "HH:MM:SS"
-        self.hotkey_listener = None
-        self.root.configure(bg="#f0f2f5")
+        # State
+        self.timestamps: list[str] = []
+        self.hotkey_listener: keyboard.Listener | None = None
+        self.was_recording = False
+        self._obs_status = "Connecting to OBS..."
 
-        # connect OBS
-        try:
-            self.client = ReqClient(
-                host=self.cfg["host"],
-                port=int(self.cfg["port"]),
-                password=self.cfg["password"]
-            )
-            self.status_label_text = "Connected to OBS WebSocket."
-            print("[INFO] Connected to OBS.")
-        except Exception as e:
-            self.client = None
-            self.status_label_text = "OBS not connected. Start OBS and try again."
-            print(f"[ERROR] Could not connect to OBS: {e}")
+        # OBS connection (non-blocking)
+        self.client: ReqClient | None = None
+        self._connect_obs()
 
-        # --- filename/session + edge detection ---
+        # Session filename (determined once per recording session)
         self.filename = self._next_filename()
-        self.was_recording = False  # remember last state to detect stop/start edges
 
-        # ---------- TABS ----------
+        # Build UI
+        self._build_ui()
+
+        # Start background tasks
+        self.root.after(500, self._poll_obs)
+        self._start_hotkey_listener()
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+
+    # ------------------------------------------------------------------
+    # OBS connection
+    # ------------------------------------------------------------------
+
+    def _connect_obs(self) -> None:
+        """Attempt to connect to OBS in a background thread so the UI doesn't block."""
+        def attempt():
+            try:
+                self.client = ReqClient(
+                    host=self.cfg["host"],
+                    port=int(self.cfg["port"]),
+                    password=self.cfg["password"],
+                )
+                self._obs_status = "Connected to OBS WebSocket."
+                print("[INFO] Connected to OBS.")
+            except Exception as e:
+                self.client = None
+                self._obs_status = "OBS not connected. Start OBS and try again."
+                print(f"[ERROR] Could not connect to OBS: {e}")
+
+        threading.Thread(target=attempt, daemon=True).start()
+
+    # ------------------------------------------------------------------
+    # UI construction
+    # ------------------------------------------------------------------
+
+    def _build_ui(self) -> None:
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True, padx=6, pady=6)
 
-        # Main tab (keep your original look)
         self.main_tab = tk.Frame(self.notebook, bg="#f0f2f5")
         self.notebook.add(self.main_tab, text="Main")
 
-        # Settings tab
         self.settings_tab = tk.Frame(self.notebook, bg="#f0f2f5")
         self.notebook.add(self.settings_tab, text="Settings")
 
-        # ---------- MAIN UI ----------
+        self._build_main_tab()
+        self._build_settings_tab()
+
+    def _build_main_tab(self) -> None:
+        tab = self.main_tab
+
         self.hotkey_label = tk.Label(
-            self.main_tab,
+            tab,
             text=f"Current Hotkey: {self.cfg.get('hotkey', 'F12').upper()}",
             font=("Arial", 14),
-            bg="#f0f2f5"
+            bg="#f0f2f5",
         )
         self.hotkey_label.pack(pady=5)
 
-        self.title_label = tk.Label(self.main_tab, text="Discord Moments Tracker", font=("Arial", 20, "bold"), bg="#f0f2f5")
-        self.title_label.pack(pady=10)
+        tk.Label(tab, text="Discord Moments Tracker", font=("Arial", 20, "bold"), bg="#f0f2f5").pack(pady=10)
 
-        self.button_frame = tk.Frame(self.main_tab, bg="#f0f2f5")
-        self.button_frame.pack(pady=20)
+        btn_frame = tk.Frame(tab, bg="#f0f2f5")
+        btn_frame.pack(pady=20)
 
-        self.mark_button = tk.Button(
-            self.button_frame,
-            text="Mark Funny Moment",
-            command=self.mark_timestamp,
-            bg="#007BFF", fg="white",
-            font=("Arial", 16), width=25, height=2
-        )
-        self.mark_button.pack(pady=10)
+        btn_cfg = {"font": ("Arial", 16), "width": 25, "height": 2, "fg": "white"}
 
-        self.change_hotkey_button = tk.Button(
-            self.button_frame,
-            text="Change Hotkey",
-            command=self.open_hotkey_window,
-            bg="#6c757d", fg="white",
-            font=("Arial", 14), width=25, height=2
-        )
-        self.change_hotkey_button.pack(pady=10)
+        tk.Button(
+            btn_frame, text="Mark Funny Moment", command=self._mark_timestamp,
+            bg="#007BFF", **btn_cfg
+        ).pack(pady=10)
 
-        self.save_exit_button = tk.Button(
-            self.button_frame,
-            text="Save & Exit",
-            command=self.save_and_exit,
-            bg="#28a745", fg="white",
-            font=("Arial", 14), width=25, height=2
-        )
-        self.save_exit_button.pack(pady=10)
+        tk.Button(
+            btn_frame, text="Change Hotkey", command=self._open_hotkey_window,
+            bg="#6c757d", **{**btn_cfg, "font": ("Arial", 14)}
+        ).pack(pady=10)
+
+        tk.Button(
+            btn_frame, text="Save & Exit", command=self._save_and_exit,
+            bg="#28a745", **{**btn_cfg, "font": ("Arial", 14)}
+        ).pack(pady=10)
 
         self.status_label = tk.Label(
-            self.main_tab,
-            text=self.status_label_text,
+            tab,
+            text=self._obs_status,
             font=("Arial", 12),
             bg="#f8f9fa",
             relief="sunken", bd=2,
-            width=50, anchor="center"
+            width=50, anchor="center",
         )
         self.status_label.pack(pady=15)
 
-        # ---------- SETTINGS UI ----------
-        self._build_settings_ui()
+    def _build_settings_tab(self) -> None:
+        tab = self.settings_tab
+        pad = {"padx": 8, "pady": 6}
 
-        # timers / listeners
-        self.root.after(500, self._poll_obs)  # handles autosave-on-stop + new-session-on-start
-        self.start_hotkey_listener()
+        labels = ["OBS Host", "OBS Port", "Password", "Save Folder"]
+        for i, text in enumerate(labels):
+            tk.Label(tab, text=text, bg="#f0f2f5").grid(row=i, column=0, sticky="e", **pad)
 
-        # intercept window close (the X)
-        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.host_var         = tk.StringVar(value=self.cfg.get("host", "localhost"))
+        self.port_var         = tk.StringVar(value=str(self.cfg.get("port", 4455)))
+        self.pw_var           = tk.StringVar(value=self.cfg.get("password", ""))
+        self.save_dir_var     = tk.StringVar(value=self.cfg.get("save_dir", ""))
+        self.silent_close_var = tk.BooleanVar(value=self.cfg.get("silent_close", False))
 
-    # ----- Settings tab -----
-    def _build_settings_ui(self):
-        pad = {'padx': 8, 'pady': 6}
+        tk.Entry(tab, textvariable=self.host_var, width=28).grid(row=0, column=1, **pad)
+        tk.Entry(tab, textvariable=self.port_var, width=28).grid(row=1, column=1, **pad)
+        tk.Entry(tab, textvariable=self.pw_var, show="*", width=28).grid(row=2, column=1, **pad)
 
-        tk.Label(self.settings_tab, text="OBS Host", bg="#f0f2f5").grid(row=0, column=0, sticky="e", **pad)
-        tk.Label(self.settings_tab, text="OBS Port", bg="#f0f2f5").grid(row=1, column=0, sticky="e", **pad)
-        tk.Label(self.settings_tab, text="Password", bg="#f0f2f5").grid(row=2, column=0, sticky="e", **pad)
-        tk.Label(self.settings_tab, text="Save Folder", bg="#f0f2f5").grid(row=3, column=0, sticky="e", **pad)
+        # Save folder row with browse button
+        folder_row = tk.Frame(tab, bg="#f0f2f5")
+        folder_row.grid(row=3, column=1, sticky="we", **pad)
+        tk.Entry(folder_row, textvariable=self.save_dir_var, width=22).pack(side="left")
+        tk.Button(folder_row, text="Browse", command=self._pick_dir).pack(side="left", padx=6)
 
-        self.host_var = tk.StringVar(value=self.cfg.get("host", "localhost"))
-        self.port_var = tk.StringVar(value=str(self.cfg.get("port", 4455)))
-        self.pw_var   = tk.StringVar(value=self.cfg.get("password", ""))
-        self.save_dir_var = tk.StringVar(value=self.cfg.get("save_dir", ""))
+        # Silent close checkbox
+        tk.Checkbutton(
+            tab,
+            text="X button saves & quits without prompt",
+            variable=self.silent_close_var,
+            bg="#f0f2f5",
+        ).grid(row=4, column=0, columnspan=2, pady=4)
 
-        tk.Entry(self.settings_tab, textvariable=self.host_var, width=28).grid(row=0, column=1, **pad)
-        tk.Entry(self.settings_tab, textvariable=self.port_var, width=28).grid(row=1, column=1, **pad)
-        tk.Entry(self.settings_tab, textvariable=self.pw_var, show="*", width=28).grid(row=2, column=1, **pad)
+        tk.Button(
+            tab, text="Save Settings", command=self._save_settings,
+            bg="#28a745", fg="white"
+        ).grid(row=5, column=0, columnspan=2, pady=10)
 
-        row = tk.Frame(self.settings_tab, bg="#f0f2f5")
-        row.grid(row=3, column=1, sticky="we", **pad)
-        tk.Entry(row, textvariable=self.save_dir_var, width=22).pack(side="left")
-        tk.Button(row, text="Browse", command=self._pick_dir).pack(side="left", padx=6)
+    # ------------------------------------------------------------------
+    # Settings actions
+    # ------------------------------------------------------------------
 
-        tk.Button(self.settings_tab, text="Save Settings", command=self._save_settings, bg="#28a745", fg="white").grid(row=4, column=0, columnspan=2, pady=10)
-
-    def _pick_dir(self):
+    def _pick_dir(self) -> None:
         d = filedialog.askdirectory()
         if d:
             self.save_dir_var.set(d)
 
-    def _save_settings(self):
-        self.cfg["host"] = self.host_var.get().strip() or "localhost"
+    def _save_settings(self) -> None:
+        self.cfg["host"]         = self.host_var.get().strip() or "localhost"
+        self.cfg["password"]     = self.pw_var.get()
+        self.cfg["save_dir"]     = self.save_dir_var.get().strip()
+        self.cfg["silent_close"] = self.silent_close_var.get()
+
         try:
             self.cfg["port"] = int(self.port_var.get().strip())
         except ValueError:
             self.cfg["port"] = 4455
-        self.cfg["password"] = self.pw_var.get()
-        self.cfg["save_dir"] = self.save_dir_var.get().strip()
+
         save_config(self.cfg)
-
-        # reconnect
-        try:
-            self.client = ReqClient(
-                host=self.cfg["host"],
-                port=self.cfg["port"],
-                password=self.cfg["password"]
-            )
-            self.status_label_text = "Connected to OBS WebSocket."
-        except Exception as e:
-            self.client = None
-            self.status_label_text = "OBS not connected. Start OBS and try again."
-            print(f"[ERROR] Could not connect to OBS: {e}")
-
-        self.status_label.config(text=self.status_label_text)
+        self._obs_status = "Connecting to OBS..."
+        self.status_label.config(text=self._obs_status)
+        self._connect_obs()
         messagebox.showinfo("Settings", "Settings saved.")
 
-    # ----- OBS helpers -----
-    def _is_recording(self):
+    # ------------------------------------------------------------------
+    # OBS helpers
+    # ------------------------------------------------------------------
+
+    def _is_recording(self) -> bool:
         if not self.client:
             return False
         try:
@@ -229,46 +275,50 @@ class OBSTimestampLogger:
         except Exception:
             return False
 
-    def _get_timecode(self):
+    def _get_timecode(self) -> str | None:
+        """Return HH:MM:SS of current recording position, or None if not recording."""
         if not self.client:
             return None
         try:
-            st = self.client.get_record_status()
-            if not st.output_active:
+            status = self.client.get_record_status()
+            if not status.output_active:
                 return None
-            seconds = (st.output_duration // 1000)
-            h = seconds // 3600
-            m = (seconds % 3600) // 60
-            s = seconds % 60
-            return f"{h:02}:{m:02}:{s:02}"
+            return format_seconds(status.output_duration // 1000)
         except Exception:
             return None
 
-    # ----- polling loop: updates status + handles stop/start edges -----
-    def _poll_obs(self):
-        rec_now = self._is_recording()
+    # ------------------------------------------------------------------
+    # Polling loop
+    # ------------------------------------------------------------------
 
-        # status text
-        tc = self._get_timecode()
-        if tc:
-            self.status_label.config(text=f"Recording... {tc}")
-        else:
+    def _poll_obs(self) -> None:
+        recording_now = self._is_recording()
+        timecode = self._get_timecode()
+
+        # Update status bar
+        if timecode:
+            self.status_label.config(text=f"Recording... {timecode}")
+        elif self.client:
             self.status_label.config(text="OBS is not recording.")
+        else:
+            self.status_label.config(text=self._obs_status)
 
-        # STOP edge: was True -> now False  ==> autosave & prep new file
-        if self.was_recording and not rec_now:
+        # Edge: recording stopped → autosave
+        if self.was_recording and not recording_now:
             self._autosave_and_reset()
 
-        # START edge: was False -> now True  ==> fresh file for new session
-        if not self.was_recording and rec_now:
-            # don’t wipe if user manually saved already; we just make sure a fresh filename is ready
+        # Edge: recording started → prepare a fresh filename
+        if not self.was_recording and recording_now:
             self.filename = self._next_filename()
 
-        self.was_recording = rec_now
+        self.was_recording = recording_now
         self.root.after(500, self._poll_obs)
 
-    # ----- UI actions -----
-    def mark_timestamp(self):
+    # ------------------------------------------------------------------
+    # Timestamp actions
+    # ------------------------------------------------------------------
+
+    def _mark_timestamp(self) -> None:
         tc = self._get_timecode()
         if tc:
             self.timestamps.append(tc)
@@ -277,58 +327,58 @@ class OBSTimestampLogger:
         else:
             self.status_label.config(text="OBS is not recording.")
 
-    # ----- saving -----
-    def _base_dir(self):
+    # ------------------------------------------------------------------
+    # File saving
+    # ------------------------------------------------------------------
+
+    def _base_dir(self) -> str:
         return self.cfg.get("save_dir") or os.getcwd()
 
-    def _next_filename(self):
+    def _next_filename(self) -> str:
+        now = datetime.now()
+        base = f"ObsTimeStamps{now.month}-{now.day}-{now.year % 100}"
         base_dir = self._base_dir()
-        base_name = f"ObsTimeStamps{datetime.now().month}-{datetime.now().day}-{datetime.now().year % 100}"
+        path = os.path.join(base_dir, f"{base}.txt")
         counter = 0
-        filename = os.path.join(base_dir, f"{base_name}.txt")
-        while os.path.exists(filename):
+        while os.path.exists(path):
             counter += 1
-            filename = os.path.join(base_dir, f"{base_name} ({counter}).txt")
-        return filename
+            path = os.path.join(base_dir, f"{base} ({counter}).txt")
+        return path
 
-    def save_timestamps(self):
+    def _save_timestamps(self) -> None:
         if not self.timestamps:
-            print("[INFO] No timestamps; not writing a file.")
+            print("[INFO] No timestamps to save.")
             return
-        # ensure directory exists
         os.makedirs(self._base_dir(), exist_ok=True)
         with open(self.filename, "w", encoding="utf-8") as f:
-            for ts in self.timestamps:
-                f.write(ts + "\n")
-        print(f"[INFO] Saved timestamps to {self.filename}")
+            f.write("\n".join(self.timestamps) + "\n")
+        print(f"[INFO] Saved {len(self.timestamps)} timestamp(s) to {self.filename}")
 
-    def _autosave_and_reset(self):
-        # save only if we have data
-        if self.timestamps:
-            self.save_timestamps()
-        # prepare for next recording session
+    def _autosave_and_reset(self) -> None:
+        self._save_timestamps()
         self.timestamps.clear()
         self.filename = self._next_filename()
         print("[INFO] Ready for next session.")
 
-    def save_and_exit(self):
-        self.save_timestamps()
-        self._persist_geometry()
-        self.root.destroy()
+    # ------------------------------------------------------------------
+    # Hotkey management
+    # ------------------------------------------------------------------
 
-    # ----- hotkey -----
-    def start_hotkey_listener(self):
+    def _stop_hotkey_listener(self) -> None:
         if self.hotkey_listener:
             self.hotkey_listener.stop()
+            self.hotkey_listener = None
+
+    def _start_hotkey_listener(self) -> None:
+        self._stop_hotkey_listener()
+
+        target = self.cfg.get("hotkey", "f12").lower()
 
         def on_press(key):
             try:
-                if hasattr(key, 'char') and key.char:
-                    pressed_key = key.char
-                else:
-                    pressed_key = key.name
-                if pressed_key and pressed_key.lower() == self.cfg.get('hotkey', 'f12').lower():
-                    self.mark_timestamp()
+                pressed = key.char if hasattr(key, "char") and key.char else key.name
+                if pressed and pressed.lower() == target:
+                    self._mark_timestamp()
             except AttributeError:
                 pass
 
@@ -337,49 +387,64 @@ class OBSTimestampLogger:
         self.hotkey_listener.start()
         print("[INFO] Hotkey listener started.")
 
-    def open_hotkey_window(self):
+    def _open_hotkey_window(self) -> None:
         win = tk.Toplevel(self.root)
         win.title("Set New Hotkey")
         tk.Label(win, text="Press any key to set as new hotkey...", font=("Arial", 14)).pack(pady=20)
 
         def on_key_press(key):
             try:
-                if hasattr(key, 'char') and key.char:
-                    pressed = key.char
-                else:
-                    pressed = key.name
+                pressed = key.char if hasattr(key, "char") and key.char else key.name
                 if pressed:
                     self.cfg["hotkey"] = pressed.lower()
                     save_config(self.cfg)
                     self.hotkey_label.config(text=f"Current Hotkey: {self.cfg['hotkey'].upper()}")
-                    self.start_hotkey_listener()
+                    self._start_hotkey_listener()
+                    self.status_label.config(text=f"New hotkey set: {self.cfg['hotkey'].upper()}")
                     win.destroy()
-                    self.status_label.config(text=f"New hotkey set: {self.cfg['hotkey']}")
             except Exception as e:
                 print(f"[ERROR] Key press handling failed: {e}")
-            finally:
-                return False
+            return False  # stop listener after first key
 
-        listener = keyboard.Listener(on_press=on_key_press)
-        listener.start()
+        keyboard.Listener(on_press=on_key_press).start()
 
-    # ----- window close (the X) -----
-    def on_close(self):
-        answer = messagebox.askyesnocancel("Save and quit?", "Save and quit?")
-        if answer is None:
-            return
-        if answer:
-            self.save_timestamps()
-        self._persist_geometry()
-        self.root.destroy()
+    # ------------------------------------------------------------------
+    # Exit handling
+    # ------------------------------------------------------------------
 
-    def _persist_geometry(self):
+    def _persist_geometry(self) -> None:
         try:
             self.cfg["geometry"] = self.root.winfo_geometry()
             save_config(self.cfg)
         except Exception:
             pass
 
+    def _quit(self, save: bool = True) -> None:
+        """Stop listeners, optionally save, persist geometry, and destroy the window."""
+        self._stop_hotkey_listener()
+        if save:
+            self._save_timestamps()
+        self._persist_geometry()
+        self.root.destroy()
+
+    def _save_and_exit(self) -> None:
+        self._quit(save=True)
+
+    def _on_close(self) -> None:
+        """Called when the user clicks the window's X button."""
+        if self.cfg.get("silent_close", False):
+            self._quit(save=True)
+            return
+
+        answer = messagebox.askyesnocancel("Quit", "Save timestamps before quitting?")
+        if answer is None:
+            return  # Cancel — do nothing
+        self._quit(save=answer)
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     root = tk.Tk()

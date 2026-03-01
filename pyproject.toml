@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "obstimestamptracker"
+version = "0.1.0"
+description = ""
+authors = ["phippsammon <phippsammon175@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.15"
+obsws-python = "^1.8.0"
+pynput = "^1.8.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^6.19.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
