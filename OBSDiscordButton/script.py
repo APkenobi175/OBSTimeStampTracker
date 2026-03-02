@@ -278,7 +278,7 @@ class OBSTimestampLogger:
         save_row.pack(fill="x", padx=16)
 
         tk.Button(
-            save_row, text="💾  Save & Start Fresh",
+            save_row, text="Save & Start Fresh",
             command=self._autosave_and_reset,
             bg=MUTED, fg="white",
             font=("Arial", 11),
@@ -313,7 +313,7 @@ class OBSTimestampLogger:
         tk.Label(toolbar, text="Current Session", font=("Arial", 11, "bold"), bg=BG).pack(side="left")
 
         tk.Button(
-            toolbar, text="📋  Copy All",
+            toolbar, text="Copy To Clipboard",
             command=self._copy_to_clipboard,
             bg=MUTED, fg="white", font=("Arial", 9),
             relief="flat", cursor="hand2", padx=8, pady=2,
@@ -360,7 +360,7 @@ class OBSTimestampLogger:
         tk.Label(header, text="Past Recording Sessions", font=("Arial", 11, "bold"), bg=BG).pack(side="left")
 
         tk.Button(
-            header, text="↻  Refresh",
+            header, text="Refresh",
             command=self._refresh_viewer_sessions,
             bg=MUTED, fg="white", font=("Arial", 9),
             relief="flat", cursor="hand2", padx=8, pady=2,
